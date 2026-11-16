@@ -1,0 +1,14 @@
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/
+# Never commit signing keys or secrets
+*.jks
+*.keystore
+*.pem
+.env
+secrets.properties
