@@ -69,7 +69,7 @@ fun JarvisScreen(engine: JarvisEngine) {
 
     var input by remember { mutableStateOf("") }
     var keyField by remember { mutableStateOf("") }
-    var showKey by remember { mutableStateOf(engine.prefs.apiKey.isBlank()) }
+    var showKey by remember { mutableStateOf(false) }
     var showRationale by remember { mutableStateOf(false) }
     var showDenied by remember { mutableStateOf(false) }
     var pending by remember { mutableStateOf<(() -> Unit)?>(null) }
