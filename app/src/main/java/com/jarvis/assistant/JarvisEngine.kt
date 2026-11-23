@@ -78,10 +78,22 @@ class JarvisEngine(private val ctx: Context) {
 
     fun submit(text: String) {
         if (text.isBlank() || status.value == Status.THINKING) return
-        voice.stop(); tts?.stop(); mode = Mode.OFF
+        voice.stop()
+        tts?.stop()
+        mode = Mode.OFF
         add(ChatMsg(true, text.trim()))
+
+        val local = basicCommand(text)
+        if (local != null) {
+            reply(local)
+            return
+        }
+
         status.value = Status.THINKING
-        if (prefs.apiKey.isBlank()) { reply("Please add your Claude API key in settings."); return }
+        if (prefs.apiKey.isBlank()) {
+            reply("I can open apps and tell the time or date without an API key.")
+            return
+        }
         scope.launch {
             val r = try {
                 claude.ask(text)
@@ -91,6 +103,52 @@ class JarvisEngine(private val ctx: Context) {
             }
             reply(r.ifBlank { "Done." })
         }
+    }
+
+    private fun basicCommand(text: String): String? {
+        val q = text.lowercase(Locale.getDefault())
+
+        if (q.contains("time") || q.contains("samay") ||
+            q.contains("समय") || q.contains("कितने बजे")) {
+            return "The time is " +
+                java.text.SimpleDateFormat("h:mm a", Locale("en", "IN"))
+                    .format(java.util.Date())
+        }
+
+        if (q.contains("date") || q.contains("tarikh") ||
+            q.contains("तारीख") || q.contains("आज की तारीख")) {
+            return "Today is " +
+                java.text.SimpleDateFormat("d MMMM yyyy", Locale("en", "IN"))
+                    .format(java.util.Date())
+        }
+
+        val apps = listOf(
+            "whatsapp" to listOf("whatsapp", "व्हाट्सएप", "व्हाट्सऐप"),
+            "youtube" to listOf("youtube", "यूट्यूब"),
+            "chrome" to listOf("chrome", "क्रोम"),
+            "settings" to listOf("settings", "सेटिंग्स"),
+            "calculator" to listOf("calculator", "कैलकुलेटर"),
+            "instagram" to listOf("instagram", "इंस्टाग्राम"),
+            "facebook" to listOf("facebook", "फेसबुक"),
+            "telegram" to listOf("telegram", "टेलीग्राम"),
+            "spotify" to listOf("spotify", "स्पॉटिफाई"),
+            "gmail" to listOf("gmail", "जीमेल"),
+            "maps" to listOf("maps", "मैप्स"),
+            "camera" to listOf("camera", "कैमरा"),
+            "gallery" to listOf("gallery", "गैलरी"),
+            "photos" to listOf("photos", "फोटो"),
+            "clock" to listOf("clock", "घड़ी"),
+            "phone" to listOf("phone", "फोन"),
+            "messages" to listOf("messages", "संदेश")
+        )
+
+        val app = apps.firstOrNull { item ->
+            item.second.any { q.contains(it) }
+        }
+
+        if (app != null) return AppLauncher(ctx).open(app.first)
+
+        return null
     }
 
     // ---------- internals ----------
