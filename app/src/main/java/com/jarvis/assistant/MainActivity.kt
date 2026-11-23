@@ -152,7 +152,7 @@ fun JarvisScreen(engine: JarvisEngine) {
 
     if (showKey) {
         AlertDialog(
-            onDismissRequest = { if (engine.prefs.apiKey.isNotBlank()) showKey = false },
+            onDismissRequest = { showKey = false },
             title = { Text("Claude API key") },
             text = {
                 Column {
