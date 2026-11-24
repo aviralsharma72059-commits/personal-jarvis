@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.speech.SpeechRecognizer
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -67,6 +68,11 @@ fun JarvisScreen(engine: JarvisEngine) {
     val lang by engine.lang.collectAsStateWithLifecycle()
     val wake by engine.wake.collectAsStateWithLifecycle()
 
+    val offlineAvailable = remember {
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            SpeechRecognizer.isOnDeviceRecognitionAvailable(ctx)
+    }
+
     var input by remember { mutableStateOf("") }
     var keyField by remember { mutableStateOf("") }
     var showKey by remember { mutableStateOf(false) }
@@ -104,6 +110,11 @@ fun JarvisScreen(engine: JarvisEngine) {
             Column(Modifier.weight(1f)) {
                 Text("J.A.R.V.I.S", color = Cyan, fontSize = 22.sp, fontWeight = FontWeight.Bold, letterSpacing = 6.sp)
                 Text(label, color = Cyan.copy(alpha = 0.6f), fontSize = 11.sp, letterSpacing = 2.sp)
+                Text(
+                    "Offline recognition: " + if (offlineAvailable) "Available" else "Not available",
+                    color = if (offlineAvailable) Color(0xFF00FF9C) else Color.Yellow,
+                    fontSize = 11.sp
+                )
             }
             TextButton(onClick = { engine.setLang(if (lang == "en-IN") "hi-IN" else "en-IN") }) {
                 Text(if (lang == "en-IN") "EN" else "हिं", color = Cyan, fontWeight = FontWeight.Bold)
