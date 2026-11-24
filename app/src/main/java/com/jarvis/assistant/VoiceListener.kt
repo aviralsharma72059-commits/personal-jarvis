@@ -2,6 +2,7 @@ package com.jarvis.assistant
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
@@ -25,7 +26,18 @@ class VoiceListener(private val ctx: Context, private val cb: Callback) {
             return
         }
 
-        val r = SpeechRecognizer.createSpeechRecognizer(ctx)
+        val r = try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                SpeechRecognizer.isOnDeviceRecognitionAvailable(ctx)
+            ) {
+                SpeechRecognizer.createOnDeviceSpeechRecognizer(ctx)
+            } else {
+                SpeechRecognizer.createSpeechRecognizer(ctx)
+            }
+        } catch (e: Exception) {
+            SpeechRecognizer.createSpeechRecognizer(ctx)
+        }
+
         rec = r
 
         r.setRecognitionListener(object : RecognitionListener {
@@ -65,6 +77,7 @@ class VoiceListener(private val ctx: Context, private val cb: Callback) {
                 )
                 .putExtra(RecognizerIntent.EXTRA_LANGUAGE, lang)
                 .putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+                .putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
         )
     }
 
