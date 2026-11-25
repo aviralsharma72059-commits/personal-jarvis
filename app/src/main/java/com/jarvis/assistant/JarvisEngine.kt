@@ -166,17 +166,27 @@ class JarvisEngine(private val ctx: Context) {
     }
 
     private fun handleError(code: Int) {
-        when {
-            code == SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> {
-                mode = Mode.OFF; wake.value = false; status.value = Status.IDLE
-                add(ChatMsg(false, "Microphone permission is missing. Please allow it in Settings."))
-            }
-            mode == Mode.WAKE -> {
-                val delay = if (code == SpeechRecognizer.ERROR_NO_MATCH ||
-                    code == SpeechRecognizer.ERROR_SPEECH_TIMEOUT) 300L else 1500L
-                main.postDelayed({ if (mode == Mode.WAKE) listenWake() }, delay)
-            }
-            else -> afterSpeak()
+        val errorName = when (code) {
+            SpeechRecognizer.ERROR_AUDIO -> "Audio error"
+            SpeechRecognizer.ERROR_CLIENT -> "Client error"
+            SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "Microphone permission missing"
+            SpeechRecognizer.ERROR_NETWORK -> "Network error"
+            SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "Network timeout"
+            SpeechRecognizer.ERROR_NO_MATCH -> "Speech not recognized"
+            SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> "Recognizer busy"
+            SpeechRecognizer.ERROR_SERVER -> "Speech server error"
+            SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "No speech detected"
+            else -> "Unknown speech error"
+        }
+
+        add(ChatMsg(false, "Voice error: $errorName (code $code)"))
+
+        if (mode == Mode.WAKE) {
+            val delay = if (code == SpeechRecognizer.ERROR_NO_MATCH ||
+                code == SpeechRecognizer.ERROR_SPEECH_TIMEOUT) 300L else 1500L
+            main.postDelayed({ if (mode == Mode.WAKE) listenWake() }, delay)
+        } else {
+            afterSpeak()
         }
     }
 
